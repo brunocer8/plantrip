@@ -1,16 +1,19 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_to_do_list/data/firestor.dart';
+
+import 'firestore.dart';
 
 abstract class AuthenticationDatasource {
-  Future<void> register(String email, String password, String PasswordConfirm);
+  Future<void> register(String email, String password, String passwordConfirm);
   Future<void> login(String email, String password);
 }
 
 class AuthenticationRemote extends AuthenticationDatasource {
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirestoreDatasource();
+
   @override
   Future<void> login(String email, String password) async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
+    await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password.trim(),
     );
@@ -18,17 +21,19 @@ class AuthenticationRemote extends AuthenticationDatasource {
 
   @override
   Future<void> register(
-      String email, String password, String PasswordConfirm) async {
-    if (PasswordConfirm == password) {
-      await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: email.trim(), password: password.trim())
-          .then((value) {
-        Firestore_Datasource().CreateUser(email);
-      });
+      String email, String password, String passwordConfirm) async {
+    if (passwordConfirm != password) {
+      throw FirebaseAuthException(
+        code: 'password-mismatch',
+        message: 'As senhas não coincidem.',
+      );
     }
+
+    final userCredential = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password.trim(),
+    );
+
+    await _firestore.createUser(userCredential.user!.email ?? email);
   }
 }
-
-final authRepositoryProvider =
-    Provider<AuthenticationDatasource>((ref) => AuthenticationRemote());

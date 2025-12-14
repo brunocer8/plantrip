@@ -13,7 +13,10 @@ class Firestore_Datasource {
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)
-          .set({"id": _auth.currentUser!.uid, "email": email});
+          .set({
+        'id': _auth.currentUser!.uid,
+        'email': email,
+      });
       return true;
     } catch (e) {
       print(e);
@@ -21,10 +24,18 @@ class Firestore_Datasource {
     }
   }
 
-  Future<bool> AddNote(String subtitle, String title, int image, List<String> tasks, List<bool> tasksStatus) async {
+  Future<bool> AddNote(
+    String subtitle,
+    String title,
+    String? imagePath,
+    List<String> tasks,
+    List<bool> tasksStatus, {
+    DateTime? travelDateTime,
+  }) async {
     try {
-      var uuid = Uuid().v4();
-      DateTime data = new DateTime.now();
+      final uuid = const Uuid().v4();
+      final data = DateTime.now();
+
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)
@@ -34,12 +45,16 @@ class Firestore_Datasource {
         'id': uuid,
         'subtitle': subtitle,
         'isDon': false,
-        'image': image,
+        'imagePath': imagePath,
         'time': '${data.hour}:${data.minute}',
         'title': title,
         'tasks': tasks,
         'tasksStatus': tasksStatus,
+        'travelDateTime': travelDateTime == null
+            ? null
+            : Timestamp.fromDate(travelDateTime),
       });
+
       return true;
     } catch (e) {
       print(e);
@@ -47,21 +62,28 @@ class Firestore_Datasource {
     }
   }
 
-  List getNotes(AsyncSnapshot snapshot) {
+  List<Note> getNotes(AsyncSnapshot snapshot) {
     try {
-      final notesList = snapshot.data!.docs.map((doc) {
+      final notesList = snapshot.data!.docs.map<Note>((doc) {
         final data = doc.data() as Map<String, dynamic>;
+
         return Note(
           data['id'],
           data['subtitle'],
           data['time'],
-          data['image'],
+          data['imagePath'],
           data['title'],
           data['isDon'],
           data['tasks'] == null ? [] : List<String>.from(data['tasks']),
-          data['tasksStatus'] == null ? [] : List<bool>.from(data['tasksStatus']),
+          data['tasksStatus'] == null
+              ? []
+              : List<bool>.from(data['tasksStatus']),
+          data['travelDateTime'] == null
+              ? null
+              : (data['travelDateTime'] as Timestamp).toDate(),
         );
       }).toList();
+
       return notesList;
     } catch (e) {
       print(e);
@@ -94,9 +116,17 @@ class Firestore_Datasource {
   }
 
   Future<bool> Update_Note(
-      String uuid, int image, String title, String subtitle, List<String> tasks, List<bool> tasksStatus) async {
+    String uuid,
+    String? imagePath,
+    String title,
+    String subtitle,
+    List<String> tasks,
+    List<bool> tasksStatus, {
+    DateTime? travelDateTime,
+  }) async {
     try {
-      DateTime data = new DateTime.now();
+      final data = DateTime.now();
+
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)
@@ -106,10 +136,14 @@ class Firestore_Datasource {
         'time': '${data.hour}:${data.minute}',
         'subtitle': subtitle,
         'title': title,
-        'image': image,
+        'imagePath': imagePath,
         'tasks': tasks,
         'tasksStatus': tasksStatus,
+        'travelDateTime': travelDateTime == null
+            ? null
+            : Timestamp.fromDate(travelDateTime),
       });
+
       return true;
     } catch (e) {
       print(e);

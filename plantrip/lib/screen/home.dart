@@ -1,41 +1,57 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_to_do_list/const/colors.dart';
-import 'package:flutter_to_do_list/screen/add_note_screen.dart';
-import 'package:flutter_to_do_list/widgets/stream_note.dart';
+import '../const/colors.dart';
+import 'add_note_screen.dart';
+import '../widgets/stream_note.dart';
 
-class Home_Screen extends ConsumerStatefulWidget {
-  const Home_Screen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  ConsumerState<Home_Screen> createState() => _Home_ScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-bool show = true;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool show = true;
 
-class _Home_ScreenState extends ConsumerState<Home_Screen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColors,
+      appBar: AppBar(
+        title: const Text('PlanTrip'),
+        backgroundColor: backgroundColors,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+        ],
+      ),
       floatingActionButton: Visibility(
         visible: show,
         child: AnimatedContainer(
-          duration: Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 250),
           child: FloatingActionButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => Add_creen(),
-              ));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const AddCreen(),
+                ),
+              );
             },
-            backgroundColor: Color(0xFF2F80ED), 
+            backgroundColor: const Color(0xFF2F80ED),
             elevation: 6,
-            child: Icon(Icons.add, size: 30, color: Colors.white),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.white24, width: 2),
+              side: const BorderSide(color: Colors.white24, width: 2),
             ),
+            child: const Icon(Icons.add, size: 30, color: Colors.white),
           ),
         ),
       ),
@@ -43,24 +59,21 @@ class _Home_ScreenState extends ConsumerState<Home_Screen> {
         child: NotificationListener<UserScrollNotification>(
           onNotification: (notification) {
             if (notification.direction == ScrollDirection.forward) {
-              setState(() {
-                show = true;
-              });
+              setState(() => show = true);
             }
             if (notification.direction == ScrollDirection.reverse) {
-              setState(() {
-                show = false;
-              });
+              setState(() => show = false);
             }
             return true;
           },
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
               child: Column(
                 children: [
-                  Stream_note(false),
-                  SizedBox(height: 8),
+                  const StreamNote(false),
+                  const SizedBox(height: 8),
                   Text(
                     'finalizadas',
                     style: TextStyle(
@@ -68,12 +81,14 @@ class _Home_ScreenState extends ConsumerState<Home_Screen> {
                       color: Colors.grey.shade500,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
-                      shadows: [Shadow(color: Colors.black12, blurRadius: 2)],
+                      shadows: const [
+                        Shadow(color: Colors.black12, blurRadius: 2)
+                      ],
                     ),
                   ),
-                  SizedBox(height: 4),
-                  Stream_note(true),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 4),
+                  const StreamNote(true),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

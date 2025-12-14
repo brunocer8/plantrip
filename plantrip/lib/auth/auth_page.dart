@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:flutter_to_do_list/screen/SingUP.dart';
-import 'package:flutter_to_do_list/screen/login.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final authPageProvider = StateProvider<bool>((ref) => true);
+import '../screen/signup.dart';
+import '../screen/login.dart';
 
-class Auth_Page extends ConsumerWidget {
-  Auth_Page({super.key});
+class AuthPage extends StatefulWidget {
+  const AuthPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final a = ref.watch(authPageProvider);
+  State<AuthPage> createState() => _AuthPageState();
+}
 
-    void to() => ref.read(authPageProvider.notifier).state = !a;
+class _AuthPageState extends State<AuthPage> {
+  bool isLogin = true;
 
-    if (a) {
-      return LogIN_Screen(to);
+  void _toggle() {
+    setState(() {
+      isLogin = !isLogin;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLogin) {
+      return LoginScreen(_toggle);
     } else {
-      return SignUp_Screen(to);
+      return SignUpScreen(_toggle);
     }
   }
 }

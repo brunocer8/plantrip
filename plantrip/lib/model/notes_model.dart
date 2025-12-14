@@ -3,11 +3,36 @@ class Note {
   String subtitle;
   String title;
   String time;
-  int image;
+  String? imagePath;
+ 
   bool isDon;
 
-  List<String>? tasks;       
-  List<bool>? tasksStatus;    
+  List<String> tasks;
+  List<bool> tasksStatus;
 
-  Note(this.id, this.subtitle, this.time, this.image, this.title, this.isDon, this.tasks, this.tasksStatus);
+  DateTime? travelDateTime;
+
+  Note(
+    this.id,
+    this.subtitle,
+    this.time,
+    this.imagePath,
+    this.title,
+    this.isDon,
+    List<String>? tasks,
+    List<bool>? tasksStatus,
+    this.travelDateTime,
+  )   : tasks = tasks ?? [],
+        tasksStatus = tasksStatus ?? [];
+
+  Note.newEmpty({
+    required this.id,
+    this.subtitle = '',
+    this.title = '',
+    this.time = '',
+    this.imagePath,
+    this.isDon = false,
+    this.travelDateTime,
+  })  : tasks = [],
+        tasksStatus = [];
 }

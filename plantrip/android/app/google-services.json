@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "513830044932",
+    "project_id": "plantrip-7d4ec",
+    "storage_bucket": "plantrip-7d4ec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:513830044932:android:da4bda9af30ac55b583c51",
+        "android_client_info": {
+          "package_name": "com.example.plantrip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGJmFWcXAA3wCvyL3dDTC4hJ1zN_tO3o8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

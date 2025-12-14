@@ -1,22 +1,28 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_to_do_list/const/colors.dart';
-import 'package:flutter_to_do_list/data/firestore_provider.dart';
-import 'package:flutter_to_do_list/model/notes_model.dart';
-import 'package:flutter_to_do_list/screen/edit_screen.dart';
+import '../data/firestore_provider.dart';
+import '../model/notes_model.dart';
+import '../screen/edit_screen.dart';
+import '../const/colors.dart';
 
-class Task_Widget extends ConsumerStatefulWidget {
-  final Note _note;
-  Task_Widget(this._note, {super.key});
+
+class TaskWidget extends ConsumerStatefulWidget {
+  final Note note;
+  const TaskWidget(this.note, {super.key});
+
 
   @override
-  ConsumerState<Task_Widget> createState() => _Task_WidgetState();
+  ConsumerState<TaskWidget> createState() => _TaskWidgetState();
 }
 
-class _Task_WidgetState extends ConsumerState<Task_Widget> {
+
+class _TaskWidgetState extends ConsumerState<TaskWidget> {
   @override
   Widget build(BuildContext context) {
-    bool isDone = widget._note.isDon;
+    bool isDone = widget.note.isDon;
+
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Container(
@@ -27,10 +33,10 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withValues(alpha: 0.2),
               spreadRadius: 5,
               blurRadius: 7,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -39,44 +45,51 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
           child: Row(
             children: [
               imageee(),
-              SizedBox(width: 25),
+              const SizedBox(width: 25),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          widget._note.title,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            widget.note.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Checkbox(
-                          activeColor: custom_green,
+                          activeColor: customBlue,
                           value: isDone,
                           onChanged: (value) {
                             setState(() {
-                              isDone = !isDone;
+                              isDone = value ?? false;
                             });
-                            ref.read(firestoreRepositoryProvider)
-                              .isdone(widget._note.id, isDone);
+                            ref
+                                .read(firestoreRepositoryProvider)
+                                .isdone(widget.note.id, isDone);
                           },
-                        )
+                        ),
                       ],
                     ),
                     Text(
-                      widget._note.subtitle,
+                      widget.note.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.grey.shade400),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.grey.shade400,
+                      ),
                     ),
-                    Spacer(),
-                    edit_time()
+                    const Spacer(),
+                    editTime(),
                   ],
                 ),
               ),
@@ -87,7 +100,8 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
     );
   }
 
-  Widget edit_time() {
+
+  Widget editTime() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -96,7 +110,7 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
             width: 90,
             height: 28,
             decoration: BoxDecoration(
-              color: custom_green,
+              color: customBlue,
               borderRadius: BorderRadius.circular(18),
             ),
             child: Padding(
@@ -107,10 +121,10 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
               child: Row(
                 children: [
                   Image.asset('images/icon_time.png'),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   Text(
-                    widget._note.time,
-                    style: TextStyle(
+                    widget.note.time,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -120,18 +134,20 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
               ),
             ),
           ),
-          SizedBox(width: 20),
+          const SizedBox(width: 20),
           GestureDetector(
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => Edit_Screen(widget._note),
-              ));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => EditScreen(widget.note),
+                ),
+              );
             },
             child: Container(
               width: 90,
               height: 28,
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 210, 230, 250),
+                color: const Color.fromARGB(255, 210, 230, 250),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Padding(
@@ -142,8 +158,8 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
                 child: Row(
                   children: [
                     Image.asset('images/icon_edit.png'),
-                    SizedBox(width: 10),
-                    Text(
+                    const SizedBox(width: 10),
+                    const Text(
                       'editar',
                       style: TextStyle(
                         fontSize: 14,
@@ -160,14 +176,34 @@ class _Task_WidgetState extends ConsumerState<Task_Widget> {
     );
   }
 
+
   Widget imageee() {
+    if (widget.note.imagePath == null || widget.note.imagePath!.isEmpty) {
+      return Container(
+        height: 130,
+        width: 100,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.grey,
+        ),
+      );
+    }
+
+
     return Container(
       height: 130,
       width: 100,
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
         color: Colors.white,
         image: DecorationImage(
-          image: AssetImage('images/${widget._note.image}.png'),
+          image: FileImage(
+            File(widget.note.imagePath!),
+          ),
           fit: BoxFit.cover,
         ),
       ),

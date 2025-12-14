@@ -1,41 +1,67 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_to_do_list/const/colors.dart';
-import 'package:flutter_to_do_list/data/firestore_provider.dart';
-import 'package:flutter_to_do_list/model/notes_model.dart';
+import 'package:image_picker/image_picker.dart';
+import '../const/colors.dart';
+import '../data/firestore_provider.dart';
+import '../model/notes_model.dart';
 
-class Edit_Screen extends ConsumerStatefulWidget {
-  final Note _note;
-  Edit_Screen(this._note, {super.key});
+
+class EditScreen extends ConsumerStatefulWidget {
+  final Note note;
+  const EditScreen(this.note, {super.key});
+
 
   @override
-  ConsumerState<Edit_Screen> createState() => _Edit_ScreenState();
+  ConsumerState<EditScreen> createState() => _EditScreenState();
 }
 
-class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
-  TextEditingController? title;
-  TextEditingController? subtitle;
+
+class _EditScreenState extends ConsumerState<EditScreen> {
+  late TextEditingController title;
+  late TextEditingController subtitle;
+
+
   final List<String> tasks = [];
   final List<bool> tasksChecked = [];
   final taskController = TextEditingController();
 
-  FocusNode _focusNode1 = FocusNode();
-  FocusNode _focusNode2 = FocusNode();
-  int indexx = 0;
+
+  final FocusNode _focusNode1 = FocusNode();
+  final FocusNode _focusNode2 = FocusNode();
+
+
+  final ImagePicker _picker = ImagePicker();
+
+
+  String? _imagePath;
+
 
   @override
   void initState() {
     super.initState();
-    title = TextEditingController(text: widget._note.title);
-    subtitle = TextEditingController(text: widget._note.subtitle);
-    tasks.addAll(widget._note.tasks ?? []);
-    tasksChecked.addAll(widget._note.tasksStatus ?? List<bool>.filled(tasks.length, false));
-    try {
-      indexx = (widget._note as dynamic).imgIndex ?? 0;
-    } catch (_) {
-      indexx = 0;
-    }
+    title = TextEditingController(text: widget.note.title);
+    subtitle = TextEditingController(text: widget.note.subtitle);
+
+
+    tasks.addAll(widget.note.tasks);
+    tasksChecked.addAll(widget.note.tasksStatus);
+
+
+    _imagePath = widget.note.imagePath;
   }
+
+
+  @override
+  void dispose() {
+    title.dispose();
+    subtitle.dispose();
+    taskController.dispose();
+    _focusNode1.dispose();
+    _focusNode2.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +74,17 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                title_widgets(),
-                SizedBox(height: 18),
-                subtite_wedgite(),
-                SizedBox(height: 18),
+                titleWidgets(),
+                const SizedBox(height: 18),
+                subtiteWedgite(),
+                const SizedBox(height: 18),
+                if (_imagePath != null) imagePreview(),
+                if (_imagePath != null) const SizedBox(height: 18),
                 todoInput(),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 todoList(),
-                SizedBox(height: 18),
-                imagess(),
-                SizedBox(height: 22),
-                button()
+                const SizedBox(height: 22),
+                button(),
               ],
             ),
           ),
@@ -67,121 +93,202 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
     );
   }
 
+
   Widget button() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF2F80ED),
-            minimumSize: Size(170, 48),
+            backgroundColor: const Color(0xFF2F80ED),
+            minimumSize: const Size(170, 48),
             elevation: 3,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            textStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
           ),
           onPressed: () async {
+            if (!mounted) return;
+
+
             final firestore = ref.read(firestoreRepositoryProvider);
-            await firestore.Update_Note(
-              widget._note.id,
-              indexx,
-              title!.text,
-              subtitle!.text,
+            await firestore.updateNote(
+              widget.note.id,
+              _imagePath,
+              title.text,
+              subtitle.text,
               tasks,
               tasksChecked,
+              travelDateTime: widget.note.travelDateTime,
             );
+
+
+            if (!mounted) return;
             Navigator.pop(context);
           },
-          child: Text('atualizar', style: TextStyle(color: Colors.white)),
+          child: const Text('atualizar', style: TextStyle(color: Colors.white)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFE6ECFF),
-            minimumSize: Size(170, 48),
+            backgroundColor: const Color(0xFFE6ECFF),
+            minimumSize: const Size(170, 48),
             elevation: 1,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            textStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 17),
+            textStyle:
+                const TextStyle(fontWeight: FontWeight.normal, fontSize: 17),
           ),
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text('cancelar',
-              style: TextStyle(color: Color(0xFF7C6BD7))),
+          child: const Text(
+            'cancelar',
+            style: TextStyle(color: Color(0xFF7C6BD7)),
+          ),
         ),
       ],
     );
   }
 
-  Container imagess() {
-    return Container(
-      height: 130,
-      child: ListView.builder(
-        itemCount: 4,
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                indexx = index;
-              });
-            },
-            child: Padding(
-              padding: EdgeInsets.only(left: index == 0 ? 4 : 0),
+
+  Widget imagePreview() {
+    return GestureDetector(
+      onTap: _showImageOptionsBottomSheet,
+      child: Container(
+        width: double.infinity,
+        height: 160,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(19),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(19),
+              child: Image.file(
+                File(_imagePath!),
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
               child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(
-                    width: 3,
-                    color: indexx == index ? Color(0xFF2F80ED) : Colors.grey.shade300,
-                  ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 7)
-                  ],
+                  color: Colors.black45,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                width: 110,
-                margin: EdgeInsets.all(7),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset('images/${index}.png', fit: BoxFit.cover),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.edit, size: 16, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'editar imagem',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 
-  Widget title_widgets() {
+
+  Future<void> _showImageOptionsBottomSheet() async {
+    if (!mounted) return;
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Alterar imagem (galeria)'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final picked =
+                      await _picker.pickImage(source: ImageSource.gallery);
+                  if (picked != null && mounted) {
+                    setState(() => _imagePath = picked.path);
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Alterar imagem (câmera)'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final picked =
+                      await _picker.pickImage(source: ImageSource.camera);
+                  if (picked != null && mounted) {
+                    setState(() => _imagePath = picked.path);
+                  }
+                },
+              ),
+              const Divider(height: 0),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Remover imagem',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _imagePath = null);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+
+  Widget titleWidgets() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(19),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: TextField(
           controller: title,
           focusNode: _focusNode1,
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: const TextStyle(fontSize: 18, color: Colors.black),
           decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             hintText: 'destino',
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: Color(0xffc5c5c5),
                 width: 2.0,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(13),
-              borderSide: BorderSide(
-                color: custom_green,
+              borderSide: const BorderSide(
+                color: customBlue,
                 width: 2.0,
               ),
             ),
@@ -191,34 +298,36 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
     );
   }
 
-  Padding subtite_wedgite() {
+
+  Widget subtiteWedgite() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(19),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: TextField(
           maxLines: 3,
           controller: subtitle,
           focusNode: _focusNode2,
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: const TextStyle(fontSize: 18, color: Colors.black),
           decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             hintText: 'descrição',
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: Color(0xffc5c5c5),
                 width: 2.0,
               ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(13),
-              borderSide: BorderSide(
-                color: custom_green,
+              borderSide: const BorderSide(
+                color: customBlue,
                 width: 2.0,
               ),
             ),
@@ -227,6 +336,7 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
       ),
     );
   }
+
 
   Widget todoInput() {
     return Padding(
@@ -238,24 +348,27 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 3)
+                ],
               ),
               child: TextField(
                 controller: taskController,
                 decoration: InputDecoration(
                   hintText: 'nova tarefa',
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 11),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: Color(0xffc5c5c5),
                       width: 2.0,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: custom_green,
+                    borderSide: const BorderSide(
+                      color: customBlue,
                       width: 2.0,
                     ),
                   ),
@@ -263,15 +376,17 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
               ),
             ),
           ),
-          SizedBox(width: 7),
+          const SizedBox(width: 7),
           Container(
             decoration: BoxDecoration(
-              color: Color(0xFF2F80ED),
+              color: const Color(0xFF2F80ED),
               borderRadius: BorderRadius.circular(11),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 3)
+              ],
             ),
             child: IconButton(
-              icon: Icon(Icons.add, color: Colors.white),
+              icon: const Icon(Icons.add, color: Colors.white),
               onPressed: () {
                 if (taskController.text.isNotEmpty) {
                   setState(() {
@@ -288,10 +403,11 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
     );
   }
 
+
   Widget todoList() {
     return ListView.builder(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: tasks.length,
       itemBuilder: (context, index) {
         return Padding(
@@ -300,14 +416,16 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(13),
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 3)],
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 3)
+              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: CheckboxListTile(
                     title: Text(tasks[index]),
-                    activeColor: Color(0xFF2F80ED),
+                    activeColor: const Color(0xFF2F80ED),
                     checkColor: Colors.white,
                     value: tasksChecked[index],
                     onChanged: (value) {
@@ -319,7 +437,8 @@ class _Edit_ScreenState extends ConsumerState<Edit_Screen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete, color: Color(0xFF5695F4)),
+                  icon:
+                      const Icon(Icons.delete, color: Color(0xFF5695F4)),
                   onPressed: () {
                     setState(() {
                       tasks.removeAt(index);

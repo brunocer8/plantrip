@@ -1,16 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_to_do_list/auth/main_page.dart';
-import 'package:flutter_to_do_list/firebase_options.dart';
+import 'auth/main_page.dart';
+import 'firebase_options.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(
-    ProviderScope(
+    const ProviderScope(
       child: MyApp(),
     ),
   );
@@ -22,8 +24,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Plantrip',
       debugShowCheckedModeBanner: false,
-      home: Main_Page(),
+      theme: ThemeData(
+        useMaterial3: true,
+      ),
+      home: const MainPage(),
     );
   }
 }

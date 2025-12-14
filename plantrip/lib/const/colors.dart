@@ -1,4 +1,4 @@
 import 'package:flutter/material.dart';
 
-Color custom_green = Color.fromARGB(255, 17, 76, 118);
-Color backgroundColors = const Color.fromARGB(255, 255, 255, 255);
+const Color customBlue = Color.fromARGB(255, 17, 76, 118);
+const Color backgroundColors = Color.fromARGB(255, 255, 255, 255);

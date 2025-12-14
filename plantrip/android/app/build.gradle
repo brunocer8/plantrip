@@ -1,3 +1,10 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "com.google.gms.google-services"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -6,9 +13,12 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+// O flutterRoot geralmente não é mais necessário definir manualmente com o novo plugin,
+// mas se você precisar dele para alguma lógica específica, pode deixar aqui.
 def flutterRoot = localProperties.getProperty('flutter.sdk')
 if (flutterRoot == null) {
-    throw  GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+    // Como o plugin já valida o SDK, esse throw é opcional, mas mal não faz.
+    // throw new GradleException("Flutter SDK not found...") 
 }
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
@@ -20,13 +30,6 @@ def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
-
-
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'com.google.gms.google-services'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.example.plantrip"
@@ -47,11 +50,11 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.flutter_to_do_list"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 21
+        // ATENÇÃO: Verifique se o ID abaixo está correto. 
+        // No namespace você usou "plantrip", aqui está "flutter_to_do_list".
+        applicationId "com.example.flutter_to_do_list" 
+        
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -60,8 +63,6 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig signingConfigs.debug
         }
     }
@@ -73,7 +74,6 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-    implementation("com.google.firebase:firebase-analytics")
+    implementation platform("com.google.firebase:firebase-bom:34.6.0")
+    implementation "com.google.firebase:firebase-analytics"
 }
-

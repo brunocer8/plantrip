@@ -1,6 +1,6 @@
 {
-    "name": "flutter_to_do_list",
-    "short_name": "flutter_to_do_list",
+    "name": "plantrip",
+    "short_name": "plantrip",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
