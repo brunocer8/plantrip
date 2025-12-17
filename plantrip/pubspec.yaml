@@ -1,7 +1,7 @@
 name: plantrip
 description: "A new Flutter project."
 
-publish_to: 'none' 
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -11,9 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-    
+
   cupertino_icons: ^1.0.8
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
@@ -29,6 +30,10 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.6.1
+
+
 flutter:
 
   uses-material-design: true
@@ -37,4 +42,3 @@ flutter:
      - images/icon_edit.png
      - images/icon_time.png
      - images/7.png
-
